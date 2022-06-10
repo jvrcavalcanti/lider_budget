@@ -1,0 +1,17 @@
+html {
+  
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  margin: auto;
+  max-width: 38rem;
+  padding: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  /* background-color: #969996; */
+}
+
+.container-fluid {
+  padding: 0;
+}

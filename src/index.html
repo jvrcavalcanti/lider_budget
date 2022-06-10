@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Líder Esquadrias Orçamentos</title>
+    <!-- CSS only -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+    <style type="text/css">
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+        Arial, sans-serif;
+        margin: auto;
+        max-width: 38rem;
+        padding: 2rem;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        background-color: #969996;
+      }
+
+      .vertical-center {
+        vertical-align: middle;
+        align-items: center;
+      }
+
+      .container-fluid {
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body class="rounded">
+    <div class="container-fluid bg-secondary rounded p-5">
+      <h1 class="text-center mb-3" id="title">
+        Orçamento
+      </h1>
+      <div class="mb-1 ignore-pdf">
+        <input type="text" required class="form-control" id="name" placeholder="Nome" />
+      </div>
+      <hr/>
+      <form id="form-1" class="ignore-pdf">
+        <div class="mb-1">
+          <label for="quantidade" class="form-label">Quantidade</label>
+          <input required type="number" pattern="[0-9]+" min="0" step="1" class="form-control" id="quantidade" aria-describedby="quantidadeHelp">
+          <div id="quantidadeHelp" class="form-text">Apenas números inteiros.</div>
+        </div>
+        <hr/>
+        <div class="mb-1">
+          <label for="descricao" class="form-label">Descrição</label>
+          <textarea required class="form-control" id="descricao"></textarea>
+        </div>
+        <hr/>
+        <div class="mb-1">
+          <label for="preco" class="form-label">Preço Unitário</label>
+          <input required type="text" pattern="^([0-9]+)(,([0-9]{2}))?$" class="form-control" id="preco" aria-describedby="precoHelp">
+        </div>
+        <hr/>
+        <div class="mb-1">
+          <label for="arquivo" class="form-label">Imagem do produto</label>
+          <input required  type="file" id="arquivo" class="form-control" />
+        </div>
+        <hr/>
+        <div class="text-center mb-3">
+          <button class="btn btn-success ignore-pdf">Salvar</button>
+        </div>
+      </form>
+      <table id="table" class="table mb-3">
+        <h3 class="text-center">Itens</h3>
+        <thead class="text-center">
+          <tr>
+            <th scope="col">Quantidade</th>
+            <th scope="col">Descrição</th>
+            <th scope="col">Preço Unitário</th>
+            <th scope="col">Preço Total</th>
+            <th scope="col">Imagem</th>
+          </tr>
+        </thead>
+        <tbody class="text-center" id="tbody">
+          <!-- Autocomplete by script -->
+        </tbody>
+      </table>
+      <div class="w-100 text-end mb-3">
+        <label class="border border-dark rounded">
+          Total: R$ <span class="text-danger" id="total">0</span>
+        </label>
+      </div>
+      <form id="form-2" class="ignore-pdf">
+        <div class="text-center">
+          <button class="btn btn-danger" type="submit" id="pdf">Gerar PDF</button>
+        </div>
+      </form>
+    </div>
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      localStorage.clear();
+      localStorage.setItem('files', "[]")
+      let id;
+      const convertToBRDecimalSeparate = (value) => parseFloat(value.toString().replace(',','.'));
+      const convertToEUADecimalSeparate = (value) => parseFloat(value.toString().replace('.',','));
+
+      document.querySelector('#name').addEventListener('change', e => {
+        const name = e.target.value.toString().trim();
+        clearTimeout(id);
+        id = setTimeout(() => {
+          document.querySelector('#title').innerHTML += name
+          localStorage.setItem('name', name);
+        }, 100);
+      });
+
+      const imageToDataURL = (img) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        return canvas.toDataURL('image/jpeg');
+      };
+
+      const convertImagesToDataURL = () => {
+        const images = document.querySelectorAll('img');
+        console.log(images);
+        images.forEach(image => {
+          const dataURL = imageToDataURL(image);
+          console.log(dataURL);
+          image.src = dataURL;
+        });
+      };
+
+      document.querySelector('#form-1').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const reader = new FileReader();
+
+        const qtd = parseInt(document.querySelector('#quantidade').value);
+        const description = document.querySelector('#descricao').value;
+        const price = convertToBRDecimalSeparate(document.querySelector('#preco').value);
+        const totalP = qtd * price;
+        const image = document.querySelector('#arquivo').files[0];
+
+        const tobdy = document.querySelector('#tbody');
+        const tr = document.createElement('tr');
+        const tdQtd = document.createElement('td');
+        const tdDescription = document.createElement('td');
+        const tdPrice = document.createElement('td');
+        const tdtotalP = document.createElement('td');
+        const tdImage = document.createElement('td');
+        const imgElement = document.createElement('img');
+
+
+        console.log(image);
+        const files = JSON.parse(localStorage.getItem('files'));
+        localStorage.setItem('files', JSON.stringify([...files, {
+          name: image.name,
+          path: image.path,
+          size: image.size,
+          type: image.type,
+          lastModified: image.lastModified
+        }]));
+
+
+        imgElement.src = image.path;
+        tdQtd.style.width = '5%';
+        tdDescription.style.width = '55%';
+        tdPrice.style.width = '20%';
+        tdtotalP.style.width = '20%';
+        imgElement.classList.add('w-100');
+
+
+        tdQtd.innerHTML = qtd;
+        tdDescription.innerHTML = description;
+        tdPrice.innerHTML = convertToEUADecimalSeparate(price.toFixed(2));
+        tdtotalP.innerHTML = convertToEUADecimalSeparate(totalP.toFixed(2));
+
+        tdImage.appendChild(imgElement);
+        tr.appendChild(tdQtd);
+        tr.appendChild(tdDescription);
+        tr.appendChild(tdPrice);
+        tr.appendChild(tdtotalP);
+        tr.appendChild(tdImage);
+        tbody.appendChild(tr);
+
+        document
+          .querySelectorAll('table tbody td')
+          .forEach(td => td.classList.add('vertical-center', 'h-100'));
+
+        const total = document.querySelector('#total');
+        total.innerHTML = (convertToBRDecimalSeparate(total.innerText) + totalP).toFixed(2);
+
+        setTimeout(() => {
+          convertImagesToDataURL();
+        }, 100);
+      });
+    </script>
+  </body>
+</html>

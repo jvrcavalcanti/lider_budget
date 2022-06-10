@@ -1,0 +1,4 @@
+out/
+dist/
+*.log
+*.lock
